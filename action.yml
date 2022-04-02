@@ -17,4 +17,4 @@ runs:
     - name: Postinstall
       if: steps.yarn-cache.outputs.cache-hit == 'true'
       shell: bash
-      run: yarn postinstall
+      run: yarn run postinstall
