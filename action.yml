@@ -14,3 +14,6 @@ runs:
       if: steps.yarn-cache.outputs.cache-hit != 'true'
       shell: bash
       run: corepack enable && yarn install --immutable
+    - name: PostInstall
+      shell: bash
+      run: yarn run postinstall
