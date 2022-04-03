@@ -20,6 +20,6 @@ runs:
       shell: bash
       run: corepack enable && yarn install --immutable
     - name: Postinstall
-      if: inputs.postinstall == 'true' && steps.yarn-cache.outputs.cache-hit == 'true'
+      if: inputs.postinstall == 'true'
       shell: bash
       run: yarn run postinstall
