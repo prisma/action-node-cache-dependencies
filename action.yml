@@ -1,5 +1,10 @@
 name: Cache node_modules
 description: Cache node_modules after install
+inputs:
+  postinstall:
+    description: 'Run yarn postinstall'
+    required: false
+    default: 'false'
 runs:
   using: composite
   steps:
@@ -11,6 +16,10 @@ runs:
           **/node_modules
         key: yarn-cache-${{ hashFiles('**/yarn.lock') }}
     - name: Install Dependencies
-      if: steps.yarn-cache.outputs.cache-hit != 'true'
+      if: steps.yarn-cache.outputs.cache-hit == 'true'
       shell: bash
       run: corepack enable && yarn install --immutable
+    - name: Postinstall
+      if: steps.yarn-cache-outputs.cache-hit == true && inputs.postinstall == true
+      shell: bash
+      run: yarn run postinstall
