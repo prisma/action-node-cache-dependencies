@@ -4,7 +4,7 @@ inputs:
   postinstall:
     description: 'Run yarn postinstall'
     required: false
-    default: 'false'
+    default: 'true'
 runs:
   using: composite
   steps:
