@@ -2,7 +2,7 @@ name: Cache node_modules
 description: Cache node_modules after install
 inputs:
   postinstall:
-    description: 'Run yarn postinstall'
+    description: Run yarn postinstall. By default will run if that npm script is present in the package.json file.
     required: false
     default: 'true'
 runs:
@@ -22,4 +22,9 @@ runs:
     - name: Postinstall
       if: inputs.postinstall == 'true'
       shell: bash
-      run: yarn run postinstall
+      run: |
+        if cat package.json | grep '"postinstall":' > /dev/null; then
+          yarn run postinstall
+        else
+          echo "Skipping, no postinstall script to execute."
+        fi
