@@ -41,7 +41,7 @@ runs:
         restore-keys: |
           ${{ runner.os }}-pnpm-store-
     - name: Install Dependencies
-      if: steps.detect-package-manager.outputs.package_manager == 'pnpm' && inputs.install-deps == 'true'
+      if: steps.detect-package-manager.outputs.package_manager == 'pnpm'
       shell: bash
       run: pnpm install
 
