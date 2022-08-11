@@ -8,9 +8,9 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Setup Corepack
-      shell: bash
-      run: corepack enable
+    # - name: Setup Corepack
+    #   shell: bash
+    #   run: corepack enable
     - name: Detect Package Manager
       id: detect-package-manager
       shell: bash
@@ -26,6 +26,12 @@ runs:
 
     # PnPM
     # https://github.com/pnpm/action-setup#use-cache-to-reduce-installation-time
+    - uses: pnpm/action-setup@v2.0.1
+      if: steps.detect-package-manager.outputs.package_manager == 'pnpm'
+      name: Install PnPM
+      id: pnpm-install
+      with:
+        run_install: false
     - name: Get PnPM Store Directory
       if: steps.detect-package-manager.outputs.package_manager == 'pnpm'
       id: pnpm-store
