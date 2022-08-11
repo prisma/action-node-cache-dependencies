@@ -1,26 +1,66 @@
-name: Cache node_modules
-description: Cache node_modules after install
+name: Install Dependencies
+description: Install a Node project dependencies in a cache-optimized way with the package manager used by the project.
 inputs:
   postinstall:
-    description: Run yarn postinstall. By default will run if that npm script is present in the package.json file.
+    description: Always run postinstall, even on cache hits. By default will run if that npm script is present in the package.json file.
     required: false
     default: 'true'
 runs:
   using: composite
   steps:
+    - name: Setup Corepack
+      shell: bash
+      run: corepack enable
+    - name: Detect Package Manager
+      id: detect-package-manager
+      shell: bash
+      run: |
+        if stat pnpm-lock.yaml; then
+          echo "PnPM version is $(pnpm --version)"
+          package_manager='pnpm'
+        else
+          echo "Yarn version is $(yarn --version)"
+          package_manager='yarn'
+        fi
+        echo "::set-output name=package_manager::$package_manager"
+
+    # PnPM
+    # https://github.com/pnpm/action-setup#use-cache-to-reduce-installation-time
+    - name: Get PnPM Store Directory
+      if: steps.detect-package-manager.outputs.package_manager == 'pnpm'
+      id: pnpm-store
+      shell: bash
+      run: echo "::set-output name=path::$(pnpm store path)"
+    - uses: actions/cache@v3
+      if: steps.detect-package-manager.outputs.package_manager == 'pnpm'
+      id: pnpm-cache
+      name: Setup PnPM Cache
+      with:
+        path: ${{ steps.pnpm-store.outputs.path }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+    - name: Install Dependencies
+      if: steps.detect-package-manager.outputs.package_manager == 'pnpm' && inputs.install-deps == 'true'
+      shell: bash
+      run: pnpm install
+
+
+    # Yarn
     - name: Cache node_modules
-      uses: actions/cache@v2
+      if: steps.detect-package-manager.outputs.package_manager == 'yarn'
+      uses: actions/cache@v3
       id: yarn-cache
       with:
         path: |
           **/node_modules
         key: yarn-cache-${{runner.os}}-${{ hashFiles('**/yarn.lock') }}
     - name: Install Dependencies
-      if: steps.yarn-cache.outputs.cache-hit != 'true'
+      if: steps.detect-package-manager.outputs.package_manager == 'yarn' && steps.yarn-cache.outputs.cache-hit != 'true'
       shell: bash
       run: corepack enable && yarn install --immutable
     - name: Postinstall
-      if: inputs.postinstall == 'true'
+      if: steps.detect-package-manager.outputs.package_manager == 'yarn' && inputs.postinstall == 'true'
       shell: bash
       run: |
         if cat package.json | grep '"postinstall":' > /dev/null; then
