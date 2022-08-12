@@ -1,6 +1,10 @@
 name: Install Dependencies
 description: Install a Node project dependencies in a cache-optimized way with the package manager used by the project.
 inputs:
+  ignore-scripts:
+    description: Default false. Learn more at https://pnpm.io/cli/install#--ignore-scripts.
+    required: false
+    default: 'false'
   postinstall:
     description: Always run postinstall, even on cache hits. By default will run if that npm script is present in the package.json file.
     required: false
@@ -50,8 +54,12 @@ runs:
     - name: Install Dependencies
       if: steps.detect-package-manager.outputs.package_manager == 'pnpm'
       shell: bash
-      run: pnpm install
-
+      run: |
+        if [ '${{inputs.ignore-scripts}}' == 'true' ]; then
+          pnpm install --ignore-scripts
+        else
+          pnpm install
+        fi
 
     # Yarn
     - name: Cache node_modules
