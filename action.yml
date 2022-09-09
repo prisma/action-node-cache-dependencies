@@ -61,7 +61,8 @@ runs:
     - name: Install Dependencies
       if: inputs.pnpm-install-command != 'automatic'
       shell: bash
-      run: ${{inputs.pnpm-install-command}}'
+      run: |
+        ${{inputs.pnpm-install-command}}'
     - name: Install Dependencies
       if: steps.detect-package-manager.outputs.package_manager == 'pnpm' && inputs.pnpm-install-command == 'automatic'
       shell: bash
