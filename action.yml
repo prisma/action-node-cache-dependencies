@@ -5,6 +5,10 @@ inputs:
     description: Default false. Learn more at https://pnpm.io/cli/install#--ignore-scripts.
     required: false
     default: 'false'
+  pnpm-install-command: 
+    description: The pnpm command to run to install the dependencies.
+    required: false
+    default: 'automatic'
   postinstall:
     description: Always run postinstall, even on cache hits. By default will run if that npm script is present in the package.json file.
     required: false
@@ -28,7 +32,10 @@ runs:
         fi
         echo "::set-output name=package_manager::$package_manager"
 
+    #=====
     # PnPM
+    #=====
+
     # TODO Doesn't seem to pick up the packageManager field from package.json
     # https://github.com/pnpm/action-setup#use-cache-to-reduce-installation-time
     # - uses: pnpm/action-setup@v2.0.1
@@ -52,7 +59,11 @@ runs:
         restore-keys: |
           ${{ runner.os }}-pnpm-store-
     - name: Install Dependencies
-      if: steps.detect-package-manager.outputs.package_manager == 'pnpm'
+      if: inputs.pnpm-install-command != 'automatic'
+      shell: bash
+      run: ${{inputs.pnpm-install-command}}'
+    - name: Install Dependencies
+      if: steps.detect-package-manager.outputs.package_manager == 'pnpm' && inputs.pnpm-install-command == 'automatic'
       shell: bash
       run: |
         if [ '${{inputs.ignore-scripts}}' == 'true' ]; then
@@ -61,7 +72,11 @@ runs:
           pnpm install
         fi
 
+
+    #=====
     # Yarn
+    #=====
+
     - name: Cache node_modules
       if: steps.detect-package-manager.outputs.package_manager == 'yarn'
       uses: actions/cache@v3
